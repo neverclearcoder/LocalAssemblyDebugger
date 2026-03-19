@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <startup>
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.7.1" />
+    </startup>
+  <connectionStrings>
+    <!-- OAuth örneği -->
+    <add name="CrmConnection"
+         connectionString="AuthType=OAuth;Url=https://yourorg.crm.dynamics.com/;Username=user@domain.com;Password=YourPassword;AppId=51f81489-12ee-4a9e-aaae-a2591f45987d;RedirectUri=app://58145B91-0C36-4500-8554-080854F2AC97;LoginPrompt=Auto" />
+
+    <!-- Client Secret örneği -->
+    <!--
+    <add name="CrmConnection"
+         connectionString="AuthType=ClientSecret;Url=https://yourorg.crm.dynamics.com/;ClientId=YOUR_APP_ID;ClientSecret=YOUR_CLIENT_SECRET" />
+    -->
+  </connectionStrings>
+  <appSettings>
+    <!-- DLL yolu -->
+    <add key="AssemblyPath" value="C:\Path\To\YourPlugin.dll" />
+    <!-- Hedef entity -->
+    <add key="TargetEntityName" value="contact" />
+    <add key="TargetEntityId"   value="00000000-0000-0000-0000-000000000000" />
+    <!-- Plugin mesaj tipi: Create, Update, Delete vb. -->
+    <add key="MessageName"      value="Create" />
+    <!-- true: entity CRM'den retrieve edilir | false: sadece ID ile boş entity oluşturulur -->
+    <add key="RetrieveEntity"   value="true" />
+    <!-- Custom Action için -->
+    <add key="CA_EntityName"    value="account" />
+    <add key="CA_EntityId"      value="00000000-0000-0000-0000-000000000000" />
+  </appSettings>
+</configuration>

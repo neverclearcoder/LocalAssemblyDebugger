@@ -1,0 +1,31 @@
+## Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## NuGet
+packages/
+*.nupkg
+project.lock.json
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+## Logs
+*.log
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Sensitive config (contains credentials)
+App.config
