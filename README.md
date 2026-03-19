@@ -1,110 +1,112 @@
 # LocalAssemblyDebugger
 
-Dynamics 365 / Power Platform Plugin ve Custom Action (CodeActivity) assembly'lerini **yerel ortamda**, gerçek bir CRM bağlantısıyla doğrudan debug etmeye yarayan konsol uygulaması.
+A console application for debugging Dynamics 365 / Power Platform Plugin and Custom Action (CodeActivity) assemblies **locally**, against a real CRM connection.
 
-Plugin Registration Tool'a ihtiyaç duymadan, kendi makinenizdeki Visual Studio debugger'ı ile breakpoint koyarak plugin/workflow kodunuzu çalıştırmanızı sağlar.
-
----
-
-## Özellikler
-
-- **Plugin çalıştırma** – `IPlugin` implementasyonlarını seçip gerçek CRM verisiyle tetikler
-- **Custom Action çalıştırma** – `CodeActivity` (Workflow) sınıflarını input parametreleriyle çalıştırır, output parametrelerini konsola yazdırır
-- **DLL içinden sınıf seçimi** – Yüklenen assembly içindeki tüm uygun sınıfları listeler
-- **CRM'den entity çekme** – Hedef entity'yi CRM'den otomatik olarak `Retrieve` edebilir
-- **Config kalıcılığı** – Girilen bağlantı dizesi ve parametreler `App.config`'e kaydedilir; sonraki çalıştırmada varsayılan olarak gösterilir
-- **Fake servis katmanı** – `IPluginExecutionContext`, `IOrganizationServiceFactory`, `ITracingService` gibi Dynamics SDK arayüzleri sahte (fake) implementasyonlarla karşılanır
+Run and debug your plugin/workflow code with Visual Studio breakpoints — no Plugin Registration Tool required.
 
 ---
 
-## Gereksinimler
+## Features
+
+- **Plugin execution** – Selects and triggers `IPlugin` implementations with real CRM data
+- **Custom Action execution** – Runs `CodeActivity` (Workflow) classes with input parameters and prints output parameters to the console
+- **Class selection from DLL** – Lists all eligible classes found in the loaded assembly
+- **Entity retrieval from CRM** – Can automatically `Retrieve` the target entity from CRM
+- **Config persistence** – Connection string and parameters are saved to `App.config` and shown as defaults on the next run
+- **Fake service layer** – Dynamics SDK interfaces such as `IPluginExecutionContext`, `IOrganizationServiceFactory`, and `ITracingService` are satisfied with fake implementations
+
+---
+
+## Requirements
 
 - .NET Framework 4.7.1
 - Visual Studio 2019 / 2022
-- Erişilebilir bir Dynamics 365 / Dataverse ortamı
+- An accessible Dynamics 365 / Dataverse environment
 
 ---
 
-## Kurulum
+## Setup
 
 ```bash
 git clone https://github.com/neverclearcoder/LocalAssemblyDebugger.git
 cd LocalAssemblyDebugger
 ```
 
-Visual Studio'da `LocalAssemblyDebugger.csproj` dosyasını açın ve projeyi derleyin. NuGet paketleri otomatik geri yüklenecektir.
+Open `LocalAssemblyDebugger.csproj` in Visual Studio and build the project. NuGet packages will be restored automatically.
+
+Copy `App.config.example` to `App.config` and fill in your connection string.
 
 ---
 
-## Kullanım
+## Usage
 
-### 1. Debug edilecek projeyi hazırlayın
+### 1. Prepare the project to debug
 
-Debug etmek istediğiniz Plugin veya CodeActivity projesini **Debug** modunda derleyin ve üretilen `.dll` dosyasının yolunu not edin.
+Build your Plugin or CodeActivity project in **Debug** mode and note the path of the generated `.dll` file.
 
-### 2. LocalAssemblyDebugger'ı başlatın
+### 2. Start LocalAssemblyDebugger
 
-Uygulamayı Visual Studio'dan **F5** ile veya doğrudan `LocalAssemblyDebugger.exe` olarak çalıştırın.
+Run the application with **F5** from Visual Studio or directly as `LocalAssemblyDebugger.exe`.
 
 ```
 === LocalAssemblyDebugger ===
 
-Ne çalıştırmak istiyorsunuz?
+What would you like to run?
   1 - Plugin
   2 - Custom Action (CodeActivity)
-Seçim [1]:
+Selection [1]:
 ```
 
-### 3. Plugin çalıştırma
+### 3. Running a Plugin
 
 ```
-DLL Yolu (IPlugin): C:\Repos\MyProject\bin\Debug\MyPlugin.dll
+DLL Path (IPlugin): C:\Repos\MyProject\bin\Debug\MyPlugin.dll
 
-Bulunan IPlugin sınıfları:
+Found IPlugin classes:
   1 - MyProject.Plugins.AccountCreatePlugin
   2 - MyProject.Plugins.ContactUpdatePlugin
 
-Seçim [1]: 1
+Selection [1]: 1
 
-CRM Bağlantı Dizesi: AuthType=OAuth;Url=https://org.crm.dynamics.com;...
-Entity Adı: account
+CRM Connection String: AuthType=OAuth;Url=https://org.crm.dynamics.com;...
+Entity Name: account
 Entity ID (GUID): 00000000-0000-0000-0000-000000000001
-Mesaj Adı: Create
-Entity CRM'den çekilsin mi? (true/false): true
+Message Name: Create
+Retrieve entity from CRM? (true/false): true
 ```
 
-### 4. Custom Action (CodeActivity) çalıştırma
+### 4. Running a Custom Action (CodeActivity)
 
 ```
-DLL Yolu (CodeActivity): C:\Repos\MyProject\bin\Debug\MyWorkflow.dll
+DLL Path (CodeActivity): C:\Repos\MyProject\bin\Debug\MyWorkflow.dll
 
-Bulunan CodeActivity sınıfları:
+Found CodeActivity classes:
   1 - MyProject.Workflows.SendNotificationAction
 
-Seçim [1]: 1
+Selection [1]: 1
 
-CRM Bağlantı Dizesi: AuthType=OAuth;...
-Primary Entity Adı: account
-Primary Entity ID (GUID, boş bırakılabilir):
+CRM Connection String: AuthType=OAuth;...
+Primary Entity Name: account
+Primary Entity ID (GUID, can be left empty):
 
-Giriş parametrelerini girin (boş bırakarak bitirin).
-Desteklenen tipler: string, int, bool, guid, decimal, entityref (format: logicalname,guid)
+Enter input parameters (leave blank to finish).
+Supported types: string, int, bool, guid, decimal, entityref (format: logicalname,guid)
 
-Parametre adı (boş = bitir): EmailAddress
-  EmailAddress tipi [string]: string
-  EmailAddress değeri: test@example.com
-  -> EmailAddress = test@example.com (String) eklendi.
+Parameter name (blank = done): EmailAddress
+  EmailAddress type [string]: string
+  EmailAddress value: test@example.com
+  -> EmailAddress = test@example.com (String) added.
 
-Parametre adı (boş = bitir):
+Parameter name (blank = done):
 ```
 
 ---
 
-## Input Parametre Tipleri
+## Input Parameter Types
 
-| Tip | Örnek değer |
+| Type | Example value |
 |---|---|
-| `string` | `Merhaba Dünya` |
+| `string` | `Hello World` |
 | `int` | `42` |
 | `bool` | `true` |
 | `guid` | `00000000-0000-0000-0000-000000000001` |
@@ -113,9 +115,9 @@ Parametre adı (boş = bitir):
 
 ---
 
-## CRM Bağlantı Dizesi Örnekleri
+## CRM Connection String Examples
 
-**OAuth (önerilen):**
+**OAuth (recommended):**
 ```
 AuthType=OAuth;Url=https://orgname.crm.dynamics.com;Username=user@domain.com;Password=pass;AppId=51f81489-12ee-4a9e-aaae-a2591f45987d;RedirectUri=app://58145B91-0C36-4500-8554-080854F2AC97;LoginPrompt=Auto
 ```
@@ -127,17 +129,17 @@ AuthType=ClientSecret;Url=https://orgname.crm.dynamics.com;ClientId=<AppId>;Clie
 
 ---
 
-## Proje Yapısı
+## Project Structure
 
 ```
 LocalAssemblyDebugger/
-├── Program.cs                          # Giriş noktası, kullanıcı akışı
-├── PluginExecutor.cs                   # IPlugin.Execute() çağrısını sarar
-├── CodeActivityExecutor.cs             # WorkflowInvoker ile CodeActivity çalıştırır
+├── Program.cs                          # Entry point, user flow
+├── PluginExecutor.cs                   # Wraps the IPlugin.Execute() call
+├── CodeActivityExecutor.cs             # Runs CodeActivity via WorkflowInvoker
 └── Functions/
-    ├── PluginExecutionContextFake.cs   # IPluginExecutionContext implementasyonu
-    ├── CodeActivityContextFake.cs      # IWorkflowContext implementasyonu
-    ├── ServiceProviderFake.cs          # IServiceProvider implementasyonu
+    ├── PluginExecutionContextFake.cs   # IPluginExecutionContext implementation
+    ├── CodeActivityContextFake.cs      # IWorkflowContext implementation
+    ├── ServiceProviderFake.cs          # IServiceProvider implementation
     ├── OrganizationServiceFactoryFake.cs
     ├── TracingServiceFake.cs
     └── ServiceEndpointNotificationServiceFake.cs
@@ -145,6 +147,6 @@ LocalAssemblyDebugger/
 
 ---
 
-## Lisans
+## License
 
 MIT
