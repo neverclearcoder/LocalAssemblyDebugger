@@ -149,4 +149,10 @@ LocalAssemblyDebugger/
 
 ## License
 
-MIT
+Copyright © 2025 Halil Bora Ocak ([@neverclearcoder](https://github.com/neverclearcoder)). All rights reserved.
+
+This software is proprietary and confidential. It is not licensed for any use — public, private, commercial, or otherwise — without explicit written permission from the author.
+
+- Viewing this repository does not constitute permission to use the code.
+- No open-source license is granted.
+- Forking, cloning for use, or deploying this software without authorization is prohibited.
