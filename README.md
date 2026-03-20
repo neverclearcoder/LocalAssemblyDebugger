@@ -2,7 +2,7 @@
 
 A console application for debugging Dynamics 365 / Power Platform Plugin and Custom Action (CodeActivity) assemblies **locally**, against a real CRM connection.
 
-Run and debug your plugin/workflow code with Visual Studio breakpoints — no Plugin Registration Tool required.
+Run and debug your plugin/workflow code with Visual Studio breakpoints - no Plugin Registration Tool required.
 
 ---
 
@@ -151,7 +151,7 @@ LocalAssemblyDebugger/
 
 Copyright © 2025 Halil Bora Ocak ([@neverclearcoder](https://github.com/neverclearcoder)). All rights reserved.
 
-This software is proprietary and confidential. It is not licensed for any use — public, private, commercial, or otherwise — without explicit written permission from the author.
+This software is proprietary and confidential. It is not licensed for any use - public, private, commercial, or otherwise - without explicit written permission from the author.
 
 - Viewing this repository does not constitute permission to use the code.
 - No open-source license is granted.
