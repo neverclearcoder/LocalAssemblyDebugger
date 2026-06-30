@@ -29,3 +29,8 @@ Thumbs.db
 
 ## Sensitive config (contains credentials)
 App.config
+
+## User-specific scenario profiles (contain local paths and credentials)
+scenarios/*.json
+!scenarios/example_plugin.json
+!scenarios/example_ca.json

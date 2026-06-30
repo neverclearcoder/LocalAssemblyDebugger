@@ -1,0 +1,27 @@
+{
+  "name": "example_plugin",
+  "type": "Plugin",
+  "assemblyPath": "C:\\path\\to\\YourPlugin.dll",
+  "className": "YourNamespace.YourPlugin",
+  "connectionString": "AuthType=OAuth;Url=https://yourorg.crm.dynamics.com;Username=user@yourorg.onmicrosoft.com;Password=yourpassword;AppId=51f81489-12ee-4a9e-aaae-a2591f45987d;RedirectUri=app://58145B91-0C36-4500-8554-080854F2AC97;LoginPrompt=Auto",
+  "entityName": "account",
+  "entityId": "00000000-0000-0000-0000-000000000000",
+  "messageName": "Update",
+  "stage": 40,
+  "mode": 0,
+  "depth": 1,
+  "retrieveEntity": false,
+  "unsecureConfig": "",
+  "secureConfig": "",
+  "targetAttributes": [
+    { "name": "name",       "type": "string", "value": "Test Hesap" },
+    { "name": "telephone1", "type": "string", "value": "+90 555 000 0000" }
+  ],
+  "preImages": {
+    "Target": [
+      { "name": "name",   "type": "string", "value": "Eski Hesap Adi" },
+      { "name": "statuscode", "type": "optionset", "value": "1" }
+    ]
+  },
+  "postImages": {}
+}

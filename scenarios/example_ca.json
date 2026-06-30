@@ -1,0 +1,14 @@
+{
+  "name": "example_ca",
+  "type": "CodeActivity",
+  "assemblyPath": "C:\\path\\to\\YourWorkflow.dll",
+  "className": "YourNamespace.YourCustomAction",
+  "connectionString": "AuthType=OAuth;Url=https://yourorg.crm.dynamics.com;Username=user@yourorg.onmicrosoft.com;Password=yourpassword;AppId=51f81489-12ee-4a9e-aaae-a2591f45987d;RedirectUri=app://58145B91-0C36-4500-8554-080854F2AC97;LoginPrompt=Auto",
+  "entityName": "account",
+  "entityId": "00000000-0000-0000-0000-000000000000",
+  "inputParameters": [
+    { "name": "InputText",    "type": "string",  "value": "Merhaba" },
+    { "name": "InputNumber",  "type": "int",     "value": "42" },
+    { "name": "InputEnabled", "type": "bool",    "value": "true" }
+  ]
+}
