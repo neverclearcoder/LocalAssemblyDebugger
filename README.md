@@ -8,11 +8,14 @@ Run and debug your plugin/workflow code with Visual Studio breakpoints - no Plug
 
 ## Features
 
-- **Plugin execution** – Selects and triggers `IPlugin` implementations with real CRM data
-- **Custom Action execution** – Runs `CodeActivity` (Workflow) classes with input parameters and prints output parameters to the console
+- **Interactive Spectre.Console UI** – Figlet banner, selection menus, status spinners, and result tables instead of raw `Console.ReadLine` prompts
+- **Plugin execution** – Selects and triggers `IPlugin` implementations with real CRM data, including Stage / Mode / Depth and Unsecure/Secure config
+- **Custom Action execution** – Runs `CodeActivity` (Workflow) classes via `WorkflowInvoker` with typed input parameters and printed output parameters
 - **Class selection from DLL** – Lists all eligible classes found in the loaded assembly
-- **Entity retrieval from CRM** – Can automatically `Retrieve` the target entity from CRM
-- **Config persistence** – Connection string and parameters are saved to `App.config` and shown as defaults on the next run
+- **PreImage / PostImage support** – Define image attributes by hand, or retrieve the real entity from CRM with a single confirmation
+- **Scenario profiles** – Save any plugin/CodeActivity run as a named JSON scenario under `scenarios/` and re-run it later from the main menu
+- **Legacy App.config import** – One-time migration prompt imports old `App.config`-based settings into a scenario
+- **Dual logging** – Every run writes a timestamped log under `logs/` in addition to the live console output
 - **Fake service layer** – Dynamics SDK interfaces such as `IPluginExecutionContext`, `IOrganizationServiceFactory`, and `ITracingService` are satisfied with fake implementations
 
 ---
@@ -34,7 +37,7 @@ cd LocalAssemblyDebugger
 
 Open `LocalAssemblyDebugger.csproj` in Visual Studio and build the project. NuGet packages will be restored automatically.
 
-Copy `App.config.example` to `App.config` and fill in your connection string.
+> Connection strings and other inputs are no longer stored in `App.config`. Enter them interactively and choose "save as scenario" to persist them as JSON under `scenarios/`. If you have an old `App.config` with saved settings, the app offers a one-time import into a scenario on startup.
 
 ---
 
@@ -46,59 +49,33 @@ Build your Plugin or CodeActivity project in **Debug** mode and note the path of
 
 ### 2. Start LocalAssemblyDebugger
 
-Run the application with **F5** from Visual Studio or directly as `LocalAssemblyDebugger.exe`.
+Run the application with **F5** from Visual Studio or directly as `LocalAssemblyDebugger.exe`. You'll land on the main menu:
 
 ```
-=== LocalAssemblyDebugger ===
+ _                    _ ____       _
+| |    ___   ___ __ _| |  _ \  ___| |__  _   _  __ _  __ _  ___ _ __
+| |   / _ \ / __/ _` | | | | |/ _ \ '_ \| | | |/ _` |/ _` |/ _ \ '__|
+| |__| (_) | (_| (_| | | |_| |  __/ |_) | |_| | (_| | (_| |  __/ |
+|_____\___/ \___\__,_|_|____/ \___|_.__/ \__,_|\__, |\__, |\___|_|
+                                                |___/ |___/
 
-What would you like to run?
-  1 - Plugin
-  2 - Custom Action (CodeActivity)
-Selection [1]:
+> Plugin Calistir
+  Custom Action (CodeActivity) Calistir
+  Senaryo Yukle
+  Cikis
 ```
 
 ### 3. Running a Plugin
 
-```
-DLL Path (IPlugin): C:\Repos\MyProject\bin\Debug\MyPlugin.dll
-
-Found IPlugin classes:
-  1 - MyProject.Plugins.AccountCreatePlugin
-  2 - MyProject.Plugins.ContactUpdatePlugin
-
-Selection [1]: 1
-
-CRM Connection String: AuthType=OAuth;Url=https://org.crm.dynamics.com;...
-Entity Name: account
-Entity ID (GUID): 00000000-0000-0000-0000-000000000001
-Message Name: Create
-Retrieve entity from CRM? (true/false): true
-```
+The Plugin flow walks through: assembly path → class selection (via `SelectionPrompt`) → connection string → entity/message/stage/mode/depth → target attributes → PreImage/PostImage configuration → optional scenario save → execute. Output parameters and timing are shown in a table and written to the log.
 
 ### 4. Running a Custom Action (CodeActivity)
 
-```
-DLL Path (CodeActivity): C:\Repos\MyProject\bin\Debug\MyWorkflow.dll
+The CodeActivity flow walks through: assembly path → class selection → connection string → optional context entity → typed input parameters → optional scenario save → execute via `WorkflowInvoker`.
 
-Found CodeActivity classes:
-  1 - MyProject.Workflows.SendNotificationAction
+### 5. Loading a saved scenario
 
-Selection [1]: 1
-
-CRM Connection String: AuthType=OAuth;...
-Primary Entity Name: account
-Primary Entity ID (GUID, can be left empty):
-
-Enter input parameters (leave blank to finish).
-Supported types: string, int, bool, guid, decimal, entityref (format: logicalname,guid)
-
-Parameter name (blank = done): EmailAddress
-  EmailAddress type [string]: string
-  EmailAddress value: test@example.com
-  -> EmailAddress = test@example.com (String) added.
-
-Parameter name (blank = done):
-```
+Choose **Senaryo Yukle** from the main menu to list, run, or delete previously saved JSON scenarios (see `scenarios/example_plugin.json` and `scenarios/example_ca.json`).
 
 ---
 
@@ -112,6 +89,7 @@ Parameter name (blank = done):
 | `guid` | `00000000-0000-0000-0000-000000000001` |
 | `decimal` | `3.14` |
 | `entityref` | `account,00000000-0000-0000-0000-000000000001` |
+| `optionset` | `1` |
 
 ---
 
@@ -133,16 +111,33 @@ AuthType=ClientSecret;Url=https://orgname.crm.dynamics.com;ClientId=<AppId>;Clie
 
 ```
 LocalAssemblyDebugger/
-├── Program.cs                          # Entry point, user flow
-├── PluginExecutor.cs                   # Wraps the IPlugin.Execute() call
-├── CodeActivityExecutor.cs             # Runs CodeActivity via WorkflowInvoker
-└── Functions/
-    ├── PluginExecutionContextFake.cs   # IPluginExecutionContext implementation
-    ├── CodeActivityContextFake.cs      # IWorkflowContext implementation
-    ├── ServiceProviderFake.cs          # IServiceProvider implementation
-    ├── OrganizationServiceFactoryFake.cs
-    ├── TracingServiceFake.cs
-    └── ServiceEndpointNotificationServiceFake.cs
+├── Program.cs                          # Minimal entry point -> App.Run()
+├── App.cs                              # Top-level orchestration, main loop, legacy import offer
+├── Features/
+│   ├── CrmConnector.cs                 # CRM connect / current user / retrieve entity
+│   ├── PluginExecutor.cs               # Plugin instantiation, attribute mapping, IPlugin.Execute()
+│   └── CodeActivityExecutor.cs         # Runs CodeActivity via WorkflowInvoker
+├── Fakes/
+│   ├── PluginExecutionContextFake.cs   # IPluginExecutionContext implementation
+│   ├── CodeActivityContextFake.cs      # IWorkflowContext implementation
+│   ├── ServiceProviderFake.cs          # IServiceProvider implementation
+│   ├── OrganizationServiceFactoryFake.cs
+│   ├── TracingServiceFake.cs           # Forwards Trace() to DebugLogger via LogAction
+│   └── ServiceEndpointNotificationServiceFake.cs
+├── Scenarios/
+│   ├── PluginScenario.cs               # Plugin run configuration model
+│   ├── CodeActivityScenario.cs         # CodeActivity run configuration model
+│   ├── InputParameter.cs               # Typed name/type/value triple
+│   └── ScenarioService.cs              # JSON persistence, slugified naming, legacy App.config import
+├── UI/
+│   ├── MainMenu.cs                     # Figlet banner + top-level SelectionPrompt
+│   ├── PluginMenu.cs                   # 7-step interactive plugin execution flow
+│   ├── CodeActivityMenu.cs             # 5-step interactive CodeActivity execution flow
+│   ├── ScenarioMenu.cs                 # Scenario list/run/delete
+│   └── Prompts.cs                      # Shared Spectre.Console input helpers
+├── Logging/
+│   └── DebugLogger.cs                  # Dual console (AnsiConsole) + file logging
+└── scenarios/                          # Saved JSON scenarios (gitignored, example_*.json checked in)
 ```
 
 ---
