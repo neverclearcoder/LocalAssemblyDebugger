@@ -13,7 +13,7 @@ namespace LocalAssemblyDebugger.Features
             var client = new CrmServiceClient(connectionString);
             if (!client.IsReady)
                 throw new InvalidOperationException(
-                    $"CRM baglantisi kurulamadi: {client.LastCrmError}");
+                    $"Could not establish CRM connection: {client.LastCrmError}");
             return client;
         }
 

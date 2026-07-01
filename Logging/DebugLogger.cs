@@ -39,7 +39,7 @@ namespace LocalAssemblyDebugger.Logging
 
         public void WriteError(string message)
         {
-            AnsiConsole.MarkupLine($"[red]HATA: {Markup.Escape(message)}[/]");
+            AnsiConsole.MarkupLine($"[red]ERROR: {Markup.Escape(message)}[/]");
             _file.WriteLine($"[ERROR] {message}");
             _file.Flush();
         }
@@ -47,20 +47,20 @@ namespace LocalAssemblyDebugger.Logging
         public void WriteResult(bool success, string className, string entityName, string messageName, TimeSpan elapsed)
         {
             _file.WriteLine();
-            _file.WriteLine("--- SONUC ---");
-            _file.WriteLine($"Durum   : {(success ? "Basarili" : "Hata")}");
-            _file.WriteLine($"Sinif   : {className}");
+            _file.WriteLine("--- RESULT ---");
+            _file.WriteLine($"Status  : {(success ? "Success" : "Failed")}");
+            _file.WriteLine($"Class   : {className}");
             _file.WriteLine($"Entity  : {entityName}");
-            _file.WriteLine($"Mesaj   : {messageName}");
-            _file.WriteLine($"Sure    : {elapsed.TotalMilliseconds:F0}ms");
+            _file.WriteLine($"Message : {messageName}");
+            _file.WriteLine($"Elapsed : {elapsed.TotalMilliseconds:F0}ms");
             _file.Flush();
         }
 
         private void WriteFileHeader(string scenarioName)
         {
             _file.WriteLine("=== LocalAssemblyDebugger v2.0 ===");
-            _file.WriteLine($"Tarih   : {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-            _file.WriteLine($"Senaryo : {scenarioName}");
+            _file.WriteLine($"Date     : {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            _file.WriteLine($"Scenario : {scenarioName}");
             _file.WriteLine();
             _file.WriteLine("--- TRACE ---");
             _file.Flush();

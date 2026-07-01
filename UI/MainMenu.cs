@@ -12,21 +12,21 @@ namespace LocalAssemblyDebugger.UI
 
     public class MainMenu
     {
-        private const string ChoicePlugin   = "Plugin calistir";
-        private const string ChoiceCA       = "Custom Action (CodeActivity) calistir";
-        private const string ChoiceScenario = "Senaryo yukle";
-        private const string ChoiceExit     = "Cikis";
+        private const string ChoicePlugin   = "Run Plugin";
+        private const string ChoiceCA       = "Run Custom Action (CodeActivity)";
+        private const string ChoiceScenario = "Load Scenario";
+        private const string ChoiceExit     = "Exit";
 
         public MainMenuChoice Show()
         {
             AnsiConsole.Clear();
 
             AnsiConsole.Write(new FigletText("LocalDebugger") { Color = Color.Blue });
-            AnsiConsole.MarkupLine("[grey]Dynamics 365 Plugin / CodeActivity Yerel Hata Ayiklayici v2.0[/]\n");
+            AnsiConsole.MarkupLine("[grey]Dynamics 365 Plugin / CodeActivity Local Debugger v2.0[/]\n");
 
             string choice = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title("[bold]Ne yapmak istiyorsunuz?[/]")
+                    .Title("[bold]What would you like to do?[/]")
                     .AddChoices(ChoicePlugin, ChoiceCA, ChoiceScenario, ChoiceExit));
 
             switch (choice)

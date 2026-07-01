@@ -7,7 +7,7 @@
   "entityName": "account",
   "entityId": "00000000-0000-0000-0000-000000000000",
   "inputParameters": [
-    { "name": "InputText",    "type": "string",  "value": "Merhaba" },
+    { "name": "InputText",    "type": "string",  "value": "Hello" },
     { "name": "InputNumber",  "type": "int",     "value": "42" },
     { "name": "InputEnabled", "type": "bool",    "value": "true" }
   ]

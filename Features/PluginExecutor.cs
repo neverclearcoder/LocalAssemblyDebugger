@@ -27,8 +27,8 @@ namespace LocalAssemblyDebugger.Features
                 return (IPlugin)noArg.Invoke(null);
 
             throw new InvalidOperationException(
-                $"{pluginType.FullName} icin uygun constructor bulunamadi " +
-                "(parameterless veya (string,string) gerekli).");
+                $"No suitable constructor found for {pluginType.FullName} " +
+                "(parameterless or (string,string) required).");
         }
 
         public static void Execute(
@@ -94,7 +94,7 @@ namespace LocalAssemblyDebugger.Features
                 case "entityref":
                     var parts = value.Split(',');
                     if (parts.Length < 2)
-                        throw new FormatException($"entityref formati: 'logicalname,guid' bekleniyor, alindi: '{value}'");
+                        throw new FormatException($"entityref format expected: 'logicalname,guid', got: '{value}'");
                     return new EntityReference(parts[0].Trim(), Guid.Parse(parts[1].Trim()));
                 default:          return value;
             }

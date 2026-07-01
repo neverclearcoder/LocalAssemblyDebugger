@@ -59,10 +59,10 @@ Run the application with **F5** from Visual Studio or directly as `LocalAssembly
 |_____\___/ \___\__,_|_|____/ \___|_.__/ \__,_|\__, |\__, |\___|_|
                                                 |___/ |___/
 
-> Plugin Calistir
-  Custom Action (CodeActivity) Calistir
-  Senaryo Yukle
-  Cikis
+> Run Plugin
+  Run Custom Action (CodeActivity)
+  Load Scenario
+  Exit
 ```
 
 ### 3. Running a Plugin
@@ -75,7 +75,7 @@ The CodeActivity flow walks through: assembly path → class selection → conne
 
 ### 5. Loading a saved scenario
 
-Choose **Senaryo Yukle** from the main menu to list, run, or delete previously saved JSON scenarios (see `scenarios/example_plugin.json` and `scenarios/example_ca.json`).
+Choose **Load Scenario** from the main menu to list, run, or delete previously saved JSON scenarios (see `scenarios/example_plugin.json` and `scenarios/example_ca.json`).
 
 ---
 

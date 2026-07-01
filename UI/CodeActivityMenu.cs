@@ -27,13 +27,13 @@ namespace LocalAssemblyDebugger.UI
             bool fromScenario = scenario != null;
             if (scenario == null) scenario = new CodeActivityScenario();
 
-            AnsiConsole.MarkupLine("\n[bold magenta]== Custom Action (CodeActivity) Calistir ==[/]");
+            AnsiConsole.MarkupLine("\n[bold magenta]== Run Custom Action (CodeActivity) ==[/]");
 
             // Step 1: Assembly
-            string assemblyPath = Prompts.Ask("Assembly yolu (.dll)", scenario.AssemblyPath);
+            string assemblyPath = Prompts.Ask("Assembly path (.dll)", scenario.AssemblyPath);
             if (string.IsNullOrWhiteSpace(assemblyPath))
             {
-                AnsiConsole.MarkupLine("[red]Assembly yolu zorunlu.[/]"); return;
+                AnsiConsole.MarkupLine("[red]Assembly path is required.[/]"); return;
             }
             scenario.AssemblyPath = assemblyPath;
 
@@ -43,15 +43,15 @@ namespace LocalAssemblyDebugger.UI
             scenario.ClassName = activityType.FullName;
 
             // Step 3: Connection string
-            string conn = Prompts.Ask("CRM baglanti dizesi", scenario.ConnectionString);
+            string conn = Prompts.Ask("CRM connection string", scenario.ConnectionString);
             if (string.IsNullOrWhiteSpace(conn))
             {
-                AnsiConsole.MarkupLine("[red]Baglanti dizesi zorunlu.[/]"); return;
+                AnsiConsole.MarkupLine("[red]Connection string is required.[/]"); return;
             }
             scenario.ConnectionString = conn;
 
             // Step 4: Context entity (optional)
-            scenario.EntityName = Prompts.Ask("Entity logical name (bos=yok)", scenario.EntityName);
+            scenario.EntityName = Prompts.Ask("Entity logical name (empty=none)", scenario.EntityName);
             if (!string.IsNullOrWhiteSpace(scenario.EntityName))
                 scenario.EntityId = Prompts.AskGuid("Entity ID (GUID)", scenario.EntityId);
 
@@ -59,15 +59,15 @@ namespace LocalAssemblyDebugger.UI
             scenario.InputParameters = Prompts.AskInputParameterList(scenario.InputParameters);
 
             // Save?
-            if (AnsiConsole.Confirm("Bu ayarlari senaryo olarak kaydet?", !fromScenario))
+            if (AnsiConsole.Confirm("Save these settings as a scenario?", !fromScenario))
             {
-                string name = Prompts.Ask("Senaryo adi", scenario.Name);
+                string name = Prompts.Ask("Scenario name", scenario.Name);
                 scenario.Name = string.IsNullOrWhiteSpace(name) ? scenario.ClassName : name;
                 _service.Save(scenario);
-                AnsiConsole.MarkupLine($"[green]Senaryo kaydedildi: {Markup.Escape(scenario.Name)}[/]");
+                AnsiConsole.MarkupLine($"[green]Scenario saved: {Markup.Escape(scenario.Name)}[/]");
             }
 
-            if (!AnsiConsole.Confirm("Calistir?", true)) return;
+            if (!AnsiConsole.Confirm("Run now?", true)) return;
 
             Execute(scenario, activityType);
         }
@@ -76,7 +76,7 @@ namespace LocalAssemblyDebugger.UI
         {
             if (!File.Exists(assemblyPath))
             {
-                AnsiConsole.MarkupLine($"[red]Dosya bulunamadi: {Markup.Escape(assemblyPath)}[/]");
+                AnsiConsole.MarkupLine($"[red]File not found: {Markup.Escape(assemblyPath)}[/]");
                 return null;
             }
 
@@ -84,7 +84,7 @@ namespace LocalAssemblyDebugger.UI
             try { asm = Assembly.LoadFrom(assemblyPath); }
             catch (Exception ex)
             {
-                AnsiConsole.MarkupLine($"[red]Assembly yuklenemedi: {Markup.Escape(ex.Message)}[/]");
+                AnsiConsole.MarkupLine($"[red]Failed to load assembly: {Markup.Escape(ex.Message)}[/]");
                 return null;
             }
 
@@ -95,7 +95,7 @@ namespace LocalAssemblyDebugger.UI
 
             if (caTypes.Count == 0)
             {
-                AnsiConsole.MarkupLine("[red]CodeActivity sinifi bulunamadi.[/]");
+                AnsiConsole.MarkupLine("[red]No CodeActivity class was found.[/]");
                 return null;
             }
 
@@ -104,7 +104,7 @@ namespace LocalAssemblyDebugger.UI
 
             string selected = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title("CodeActivity sinifi secin:")
+                    .Title("Select a CodeActivity class:")
                     .AddChoices(names));
 
             foreach (var t in caTypes)
@@ -115,12 +115,12 @@ namespace LocalAssemblyDebugger.UI
         private void Execute(CodeActivityScenario scenario, Type activityType)
         {
             CrmServiceClient service = null;
-            AnsiConsole.Status().Start("CRM'e baglaniliyor...", ctx =>
+            AnsiConsole.Status().Start("Connecting to CRM...", ctx =>
             {
                 try { service = CrmConnector.Connect(scenario.ConnectionString); }
                 catch (Exception ex)
                 {
-                    AnsiConsole.MarkupLine($"[red]Baglanti hatasi: {Markup.Escape(ex.Message)}[/]");
+                    AnsiConsole.MarkupLine($"[red]Connection error: {Markup.Escape(ex.Message)}[/]");
                 }
             });
             if (service == null) return;
@@ -133,7 +133,7 @@ namespace LocalAssemblyDebugger.UI
             try { workflow = (CodeActivity)Activator.CreateInstance(activityType); }
             catch (Exception ex)
             {
-                AnsiConsole.MarkupLine($"[red]Sinif olusturulamadi: {Markup.Escape(ex.Message)}[/]");
+                AnsiConsole.MarkupLine($"[red]Could not create instance: {Markup.Escape(ex.Message)}[/]");
                 return;
             }
 
@@ -152,14 +152,14 @@ namespace LocalAssemblyDebugger.UI
             {
                 logger.WriteInfo($"CodeActivity: {scenario.ClassName}");
                 logger.WriteInfo($"Entity: {scenario.EntityName} / {scenario.EntityId}");
-                logger.WriteInfo($"Input parametreler: {inputs.Count}");
+                logger.WriteInfo($"Input parameters: {inputs.Count}");
 
                 IDictionary<string, object> outputs = null;
 
                 var start = DateTime.Now;
                 try
                 {
-                    AnsiConsole.Status().Start("CodeActivity calistiriliyor...", ctx =>
+                    AnsiConsole.Status().Start("Running CodeActivity...", ctx =>
                         outputs = CodeActivityExecutor.Execute(workflow, service, context, inputs, logger));
 
                     var elapsed = DateTime.Now - start;
@@ -171,7 +171,7 @@ namespace LocalAssemblyDebugger.UI
                     var elapsed = DateTime.Now - start;
                     logger.WriteResult(false, scenario.ClassName, scenario.EntityName ?? "", "Execute", elapsed);
                     logger.WriteError(ex.ToString());
-                    AnsiConsole.MarkupLine($"[red bold]CodeActivity hatasi:[/] {Markup.Escape(ex.Message)}");
+                    AnsiConsole.MarkupLine($"[red bold]CodeActivity error:[/] {Markup.Escape(ex.Message)}");
                     if (ex.InnerException != null)
                         AnsiConsole.MarkupLine($"[red]Inner: {Markup.Escape(ex.InnerException.Message)}[/]");
                 }
@@ -182,13 +182,13 @@ namespace LocalAssemblyDebugger.UI
 
         private void ShowResult(IDictionary<string, object> outputs, DebugLogger logger)
         {
-            AnsiConsole.MarkupLine("\n[green bold]CodeActivity basariyla tamamlandi.[/]");
+            AnsiConsole.MarkupLine("\n[green bold]CodeActivity completed successfully.[/]");
 
             if (outputs != null && outputs.Count > 0)
             {
                 var tbl = new Table().Border(TableBorder.Rounded)
                     .Title("[bold]Output Parameters[/]")
-                    .AddColumn("Parametre").AddColumn("Deger");
+                    .AddColumn("Parameter").AddColumn("Value");
                 foreach (var kv in outputs)
                     tbl.AddRow(Markup.Escape(kv.Key), Markup.Escape(kv.Value?.ToString() ?? "(null)"));
                 AnsiConsole.Write(tbl);
@@ -199,7 +199,7 @@ namespace LocalAssemblyDebugger.UI
             }
             else
             {
-                AnsiConsole.MarkupLine("[grey]Output parameter yok.[/]");
+                AnsiConsole.MarkupLine("[grey]No output parameters.[/]");
             }
         }
     }

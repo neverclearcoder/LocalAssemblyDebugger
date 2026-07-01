@@ -14,12 +14,12 @@
   "unsecureConfig": "",
   "secureConfig": "",
   "targetAttributes": [
-    { "name": "name",       "type": "string", "value": "Test Hesap" },
-    { "name": "telephone1", "type": "string", "value": "+90 555 000 0000" }
+    { "name": "name",       "type": "string", "value": "Test Account" },
+    { "name": "telephone1", "type": "string", "value": "+1 555 000 0000" }
   ],
   "preImages": {
     "Target": [
-      { "name": "name",   "type": "string", "value": "Eski Hesap Adi" },
+      { "name": "name",   "type": "string", "value": "Old Account Name" },
       { "name": "statuscode", "type": "optionset", "value": "1" }
     ]
   },

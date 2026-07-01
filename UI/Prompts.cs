@@ -39,7 +39,7 @@ namespace LocalAssemblyDebugger.UI
                     return defaultValue;
                 if (Guid.TryParse(raw, out Guid g))
                     return g;
-                AnsiConsole.MarkupLine("[red]Gecersiz GUID. Ornek: 3fa85f64-0000-0000-0000-000000000001[/]");
+                AnsiConsole.MarkupLine("[red]Invalid GUID. Example: 3fa85f64-0000-0000-0000-000000000001[/]");
             }
         }
 
@@ -50,7 +50,7 @@ namespace LocalAssemblyDebugger.UI
                 string raw = Ask(label, defaultValue.ToString());
                 if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
                 if (int.TryParse(raw, out int n)) return n;
-                AnsiConsole.MarkupLine("[red]Gecersiz tam sayi.[/]");
+                AnsiConsole.MarkupLine("[red]Invalid integer.[/]");
             }
         }
 
@@ -59,14 +59,14 @@ namespace LocalAssemblyDebugger.UI
             var result = defaults != null ? new List<InputParameter>(defaults) : new List<InputParameter>();
 
             AnsiConsole.MarkupLine($"\n[cyan]{Markup.Escape(title)}[/]");
-            AnsiConsole.MarkupLine("[grey]Desteklenen tipler: string int bool decimal guid entityref optionset money datetime[/]");
-            AnsiConsole.MarkupLine("[grey]entityref formati: logicalname,3fa85f64-...[/]");
-            AnsiConsole.MarkupLine("[grey]Bos ad -> bitir[/]");
+            AnsiConsole.MarkupLine("[grey]Supported types: string int bool decimal guid entityref optionset money datetime[/]");
+            AnsiConsole.MarkupLine("[grey]entityref format: logicalname,3fa85f64-...[/]");
+            AnsiConsole.MarkupLine("[grey]Empty name -> finish[/]");
 
             if (result.Count > 0)
             {
                 var tbl = new Table().Border(TableBorder.Minimal)
-                    .AddColumn("Attribute").AddColumn("Tip").AddColumn("Deger");
+                    .AddColumn("Attribute").AddColumn("Type").AddColumn("Value");
                 foreach (var p in result)
                     tbl.AddRow(Markup.Escape(p.Name), Markup.Escape(p.Type),
                         Markup.Escape(p.Value ?? ""));
@@ -75,12 +75,12 @@ namespace LocalAssemblyDebugger.UI
 
             while (true)
             {
-                string name = Ask("  Attribute adi (bos=bitir)");
+                string name = Ask("  Attribute name (empty=finish)");
                 if (string.IsNullOrWhiteSpace(name)) break;
 
                 string type = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
-                        .Title($"  [bold]{Markup.Escape(name)}[/] tip:")
+                        .Title($"  [bold]{Markup.Escape(name)}[/] type:")
                         .AddChoices(AttributeTypes));
 
                 string hint = "";
@@ -88,7 +88,7 @@ namespace LocalAssemblyDebugger.UI
                 else if (type == "datetime") hint = " [yyyy-MM-dd HH:mm:ss]";
                 else if (type == "optionset") hint = " [int]";
 
-                string value = Ask($"  {Markup.Escape(name)} degeri{hint}");
+                string value = Ask($"  {Markup.Escape(name)} value{hint}");
 
                 var existing = result.FirstOrDefault(p => p.Name == name);
                 if (existing != null) { existing.Type = type; existing.Value = value; }
@@ -104,13 +104,13 @@ namespace LocalAssemblyDebugger.UI
         {
             var result = defaults != null ? new List<InputParameter>(defaults) : new List<InputParameter>();
 
-            AnsiConsole.MarkupLine("\n[cyan]Giris Parametreleri[/]");
-            AnsiConsole.MarkupLine("[grey]Bos ad -> bitir[/]");
+            AnsiConsole.MarkupLine("\n[cyan]Input Parameters[/]");
+            AnsiConsole.MarkupLine("[grey]Empty name -> finish[/]");
 
             if (result.Count > 0)
             {
                 var tbl = new Table().Border(TableBorder.Minimal)
-                    .AddColumn("Parametre").AddColumn("Tip").AddColumn("Deger");
+                    .AddColumn("Parameter").AddColumn("Type").AddColumn("Value");
                 foreach (var p in result)
                     tbl.AddRow(Markup.Escape(p.Name), Markup.Escape(p.Type),
                         Markup.Escape(p.Value ?? ""));
@@ -119,15 +119,15 @@ namespace LocalAssemblyDebugger.UI
 
             while (true)
             {
-                string name = Ask("  Parametre adi (bos=bitir)");
+                string name = Ask("  Parameter name (empty=finish)");
                 if (string.IsNullOrWhiteSpace(name)) break;
 
                 string type = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
-                        .Title($"  [bold]{Markup.Escape(name)}[/] tip:")
+                        .Title($"  [bold]{Markup.Escape(name)}[/] type:")
                         .AddChoices(ParameterTypes));
 
-                string value = Ask($"  {Markup.Escape(name)} degeri");
+                string value = Ask($"  {Markup.Escape(name)} value");
 
                 var existing = result.FirstOrDefault(p => p.Name == name);
                 if (existing != null) { existing.Type = type; existing.Value = value; }

@@ -45,11 +45,11 @@ namespace LocalAssemblyDebugger
                         break;
 
                     case MainMenuChoice.Exit:
-                        AnsiConsole.MarkupLine("[grey]Cikis yapiliyor...[/]");
+                        AnsiConsole.MarkupLine("[grey]Exiting...[/]");
                         return;
                 }
 
-                AnsiConsole.MarkupLine("\n[grey]Devam etmek icin bir tusa basin...[/]");
+                AnsiConsole.MarkupLine("\n[grey]Press any key to continue...[/]");
                 System.Console.ReadKey(true);
             }
         }
@@ -58,11 +58,11 @@ namespace LocalAssemblyDebugger
         {
             if (!service.ShouldOfferAppConfigImport()) return;
 
-            AnsiConsole.MarkupLine("[yellow]App.config'de eski ayarlar tespit edildi.[/]");
-            if (AnsiConsole.Confirm("Eski ayarlari senaryo olarak iceri aktar?", true))
+            AnsiConsole.MarkupLine("[yellow]Legacy settings detected in App.config.[/]");
+            if (AnsiConsole.Confirm("Import legacy settings as a scenario?", true))
             {
                 service.ImportFromAppConfig();
-                AnsiConsole.MarkupLine("[green]Ayarlar iceri aktarildi.[/]");
+                AnsiConsole.MarkupLine("[green]Settings imported.[/]");
             }
         }
     }

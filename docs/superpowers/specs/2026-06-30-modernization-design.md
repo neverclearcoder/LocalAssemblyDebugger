@@ -1,44 +1,44 @@
 # LocalAssemblyDebugger v2.0 — Modernization Design Spec
 
-**Date:** 2026-06-30  
-**Status:** Approved  
-**Target:** .NET Framework 4.7.1 (zorunlu — plugin DLL'leri .NET Framework hedefliyor)
+**Date:** 2026-06-30
+**Status:** Approved
+**Target:** .NET Framework 4.7.1 (required — plugin DLLs target .NET Framework)
 
 ---
 
-## 1. Hedef
+## 1. Goal
 
-LocalAssemblyDebugger'ı Dynamics 365 plugin/CodeActivity debug aracı olarak modern, kapsamlı ve kullanılabilir bir hale getirmek. Mevcut çalışan Fakes katmanına dokunmadan temiz bir mimari üzerine yeni özellikler eklemek.
-
----
-
-## 2. Yaklaşım
-
-**Hybrid refactor:** Fakes ve executor'lar korunur. `Program.cs` parçalanır. Spectre.Console baştan tasarlanır. Yeni özellikler (PreImage, UnsecureConfig, Scenarios, Logging) temiz katmanlara ayrılır.
+Turn LocalAssemblyDebugger into a modern, comprehensive, and usable Dynamics 365 plugin/CodeActivity debugging tool. Add new features on top of a clean architecture without touching the existing, working Fakes layer.
 
 ---
 
-## 3. Proje Yapısı
+## 2. Approach
+
+**Hybrid refactor:** Fakes and executors are preserved. `Program.cs` is split apart. Spectre.Console UI is designed from scratch. New features (PreImage, UnsecureConfig, Scenarios, Logging) are split into clean layers.
+
+---
+
+## 3. Project Structure
 
 ```
 LocalAssemblyDebugger/
 │
 ├── Program.cs                         # Entry point: new App().Run()
-├── App.cs                             # Ana orkestratör, menü döngüsü
+├── App.cs                             # Top-level orchestrator, menu loop
 │
-├── UI/                                # Spectre.Console ekranları
-│   ├── MainMenu.cs                    # Figlet banner + ana menü
-│   ├── PluginMenu.cs                  # Plugin çalıştırma akışı (7 adım)
-│   ├── CodeActivityMenu.cs            # Custom Action akışı
-│   ├── ScenarioMenu.cs                # Senaryo listele/yükle/sil
-│   └── Prompts.cs                     # Paylaşılan input helper'ları
+├── UI/                                # Spectre.Console screens
+│   ├── MainMenu.cs                    # Figlet banner + main menu
+│   ├── PluginMenu.cs                  # Plugin execution flow (7 steps)
+│   ├── CodeActivityMenu.cs            # Custom Action flow
+│   ├── ScenarioMenu.cs                # List/load/delete scenarios
+│   └── Prompts.cs                     # Shared input helpers
 │
-├── Features/                          # İş mantığı, UI'dan bağımsız
-│   ├── PluginExecutor.cs              # (mevcut + UnsecureConfig/PreImage desteği)
-│   ├── CodeActivityExecutor.cs        # (mevcut, korunur)
-│   └── CrmConnector.cs                # Bağlantı yönetimi, WhoAmI, Retrieve
+├── Features/                          # Business logic, independent of UI
+│   ├── PluginExecutor.cs              # (existing + UnsecureConfig/PreImage support)
+│   ├── CodeActivityExecutor.cs        # (existing, preserved)
+│   └── CrmConnector.cs                # Connection management, WhoAmI, Retrieve
 │
-├── Fakes/                             # SDK fake implementasyonları (dokunulmaz)
+├── Fakes/                             # SDK fake implementations (do not touch)
 │   ├── PluginExecutionContextFake.cs
 │   ├── CodeActivityContextFake.cs
 │   ├── ServiceProviderFake.cs
@@ -46,66 +46,66 @@ LocalAssemblyDebugger/
 │   ├── TracingServiceFake.cs
 │   └── ServiceEndpointNotificationServiceFake.cs
 │
-├── Scenarios/                         # Senaryo sistemi
-│   ├── ScenarioService.cs             # Load/Save/List/Delete JSON dosyaları
-│   ├── PluginScenario.cs              # Plugin senaryo modeli
-│   └── CodeActivityScenario.cs        # CodeActivity senaryo modeli
+├── Scenarios/                         # Scenario system
+│   ├── ScenarioService.cs             # Load/Save/List/Delete JSON files
+│   ├── PluginScenario.cs              # Plugin scenario model
+│   └── CodeActivityScenario.cs        # CodeActivity scenario model
 │
 ├── Logging/
-│   └── DebugLogger.cs                 # Spectre console + dosya çift çıktı
+│   └── DebugLogger.cs                 # Spectre console + file dual output
 │
-├── scenarios/                         # JSON senaryo dosyaları
+├── scenarios/                         # JSON scenario files
 │   ├── .gitkeep
-│   └── example_plugin.json            # Örnek senaryo
+│   └── example_plugin.json            # Example scenario
 │
-└── logs/                              # Çalışma logları (gitignored)
+└── logs/                              # Run logs (gitignored)
     └── .gitkeep
 ```
 
 ---
 
-## 4. UI Akışı (Spectre.Console)
+## 4. UI Flow (Spectre.Console)
 
-### Ana Menü
+### Main Menu
 - Figlet banner: "LocalAssemblyDebugger"
-- SelectionPrompt ile 4 seçenek:
-  1. Plugin çalıştır
-  2. Custom Action (CodeActivity) çalıştır
-  3. Senaryo yükle
-  4. Çıkış
+- SelectionPrompt with 4 options:
+  1. Run Plugin
+  2. Run Custom Action (CodeActivity)
+  3. Load Scenario
+  4. Exit
 
-### Plugin Akışı (7 adım)
-Tüm adımlarda önceki değer/senaryo değeri default olarak gösterilir.
+### Plugin Flow (7 steps)
+The previous value/scenario value is shown as the default at every step.
 
-| Adım | Soru | UI Tipi |
+| Step | Question | UI Type |
 |------|------|---------|
-| 1/7 | DLL Yolu | TextPrompt (validation: dosya var mı?) |
-| 2/7 | CRM Bağlantı Dizesi | TextPrompt (secret: true) |
-| 3/7 | Entity Adı + GUID | TextPrompt x2 (GUID validation) |
-| 4/7 | Mesaj Adı | SelectionPrompt (Create/Update/Delete/Diğer) |
+| 1/7 | DLL Path | TextPrompt (validation: does the file exist?) |
+| 2/7 | CRM Connection String | TextPrompt (secret: true) |
+| 3/7 | Entity Name + GUID | TextPrompt x2 (GUID validation) |
+| 4/7 | Message Name | SelectionPrompt (Create/Update/Delete/Other) |
 | 5/7 | Stage / Mode / Depth | SelectionPrompt x2 + TextPrompt |
-| 6/7 | PreImage / PostImage | SelectionPrompt (Boş/CRM'den al/Elle gir) |
-| 7/7 | UnsecureConfig / SecureConfig | TextPrompt (reflection sonrası göster/gizle) |
+| 6/7 | PreImage / PostImage | SelectionPrompt (None/Retrieve from CRM/Enter manually) |
+| 7/7 | UnsecureConfig / SecureConfig | TextPrompt (shown/hidden based on reflection) |
 
-### Çalıştırma Sırasında
-- `LiveDisplay` ile gerçek zamanlı trace panel
-- TracingServiceFake çıktıları anında yansır
+### During Execution
+- Real-time trace panel via `LiveDisplay`
+- TracingServiceFake output reflected instantly
 
-### Sonuç Ekranı
-- Başarı/hata durumu (renkli panel)
-- Çalışma özeti tablosu (plugin adı, entity, mesaj, süre, log dosyası)
-- "Bu senaryoyu kaydet?" prompt'u
+### Result Screen
+- Success/error state (colored panel)
+- Run summary table (plugin name, entity, message, elapsed time, log file)
+- "Save this scenario?" prompt
 
-### Senaryo Ekranı
-- Mevcut JSON dosyalarını listele (ad, tip, son değiştirilme)
-- Seç → direkt çalıştır ya da düzenle
-- Sil seçeneği (onay iste)
+### Scenario Screen
+- List existing JSON files (name, type, last modified)
+- Select → run directly or edit
+- Delete option (with confirmation)
 
 ---
 
-## 5. Senaryo Modeli
+## 5. Scenario Model
 
-### Plugin Senaryosu (`PluginScenario.cs`)
+### Plugin Scenario (`PluginScenario.cs`)
 ```json
 {
   "name": "account_create_test",
@@ -128,14 +128,14 @@ Tüm adımlarda önceki değer/senaryo değeri default olarak gösterilir.
   },
   "preImages": {
     "preImage": {
-      "name": "Eski Ad"
+      "name": "Old Name"
     }
   },
   "postImages": {}
 }
 ```
 
-### CodeActivity Senaryosu (`CodeActivityScenario.cs`)
+### CodeActivity Scenario (`CodeActivityScenario.cs`)
 ```json
 {
   "name": "send_notification_test",
@@ -154,80 +154,80 @@ Tüm adımlarda önceki değer/senaryo değeri default olarak gösterilir.
 
 ---
 
-## 6. Yeni Özellikler
+## 6. New Features
 
-### 6.1 PreImage / PostImage Desteği
-- `PluginExecutionContextFake.PreEntityImages` ve `PostEntityImages` UI'dan doldurulabilir
-- Üç mod: (1) Boş bırak, (2) CRM'den entity retrieve et, (3) Elle attribute gir
-- Image adı kullanıcıdan alınır (default: "preImage")
-- Senaryoya kaydedilir, tekrar kullanılabilir
+### 6.1 PreImage / PostImage Support
+- `PluginExecutionContextFake.PreEntityImages` and `PostEntityImages` can be populated from the UI
+- Three modes: (1) leave empty, (2) retrieve entity from CRM, (3) enter attributes manually
+- Image name is taken from the user (default: "preImage")
+- Saved to the scenario, reusable
 
 ### 6.2 UnsecureConfig / SecureConfig
-- DLL yüklendiğinde reflection ile seçilen class'ın constructor imzaları taranır
-- `IPlugin` + constructor'da `(string, string)` overload varsa → iki TextPrompt göster
-- Sadece parameterless varsa → config adımı atlanır, kullanıcı bilgilendirilir
-- Senaryo JSON'ına kaydedilir
+- When the DLL is loaded, the selected class's constructor signatures are scanned via reflection
+- If `IPlugin` has a `(string, string)` constructor overload → show two TextPrompts
+- If only parameterless exists → the config step is skipped, the user is informed
+- Saved to the scenario JSON
 
-### 6.3 Target Entity Attribute Editörü
-- `retrieveEntity = false` seçildiğinde: "Attribute eklemek ister misiniz?" sorusu
-- Desteklenen tipler: `string`, `int`, `bool`, `guid`, `decimal`, `entityref` (logicalname,guid), `optionset` (int), `money` (decimal), `datetime` (yyyy-MM-dd HH:mm)
-- Girilen attribute'lar hem çalıştırmada hem senaryoda kullanılır
+### 6.3 Target Entity Attribute Editor
+- When `retrieveEntity = false` is selected: "Do you want to add attributes?" prompt
+- Supported types: `string`, `int`, `bool`, `guid`, `decimal`, `entityref` (logicalname,guid), `optionset` (int), `money` (decimal), `datetime` (yyyy-MM-dd HH:mm)
+- Entered attributes are used both at run time and in the scenario
 
 ### 6.4 Stage / Mode / Depth
 - Stage: SelectionPrompt → 10 (PreValidation) / 20 (PreOperation) / 40 (PostOperation)
-- Mode: SelectionPrompt → 0 (Synchronous) / 1 (Asynchronous)  
+- Mode: SelectionPrompt → 0 (Synchronous) / 1 (Asynchronous)
 - Depth: TextPrompt, int, default 1
-- `PluginExecutionContextFake` property'lerine set edilir
+- Set on `PluginExecutionContextFake` properties
 
-### 6.5 Named Scenario Profilleri
-- Depolama: `scenarios/<name>.json` (Newtonsoft.Json ile serialize)
-- Operasyonlar: Kaydet / Yükle / Listele / Sil
-- Dosya adı kuralı: senaryo adı slug'a çevrilir (boşluk→`_`, Türkçe karakter→ASCII, küçük harf) → `account_create_test.json`
-- App.config'te `AssemblyPath` varsa ilk açılışta "senaryo olarak içe aktar?" sorusu
-- `ScenarioService` UI'dan tamamen bağımsız; sadece dosya I/O
+### 6.5 Named Scenario Profiles
+- Storage: `scenarios/<name>.json` (serialized with Newtonsoft.Json)
+- Operations: Save / Load / List / Delete
+- File naming rule: scenario name is slugified (space→`_`, non-ASCII→ASCII, lowercase) → `account_create_test.json`
+- If `App.config` has `AssemblyPath`, prompt "import as scenario?" on first launch
+- `ScenarioService` is fully independent of the UI; file I/O only
 
 ### 6.6 Logging
-- `DebugLogger`: Spectre output + `StreamWriter` çift çıktı
-- `TracingServiceFake` trace mesajlarını `DebugLogger` üzerinden yazar
-- Log dosyası: `logs/yyyy-MM-dd_HH-mm-ss_<scenarioName>.log`
-- Format: header (metadata) + trace bölümü + sonuç bölümü
-- `logs/` klasörü `.gitignore`'a eklenir
+- `DebugLogger`: Spectre output + `StreamWriter` dual output
+- `TracingServiceFake` writes trace messages through `DebugLogger`
+- Log file: `logs/yyyy-MM-dd_HH-mm-ss_<scenarioName>.log`
+- Format: header (metadata) + trace section + result section
+- `logs/` folder is added to `.gitignore`
 
 ---
 
-## 7. Hata Yönetimi
+## 7. Error Handling
 
-| Durum | Davranış |
+| Situation | Behavior |
 |-------|---------|
-| DLL yüklenemedi | Kırmızı Markup panel, `ex.Message` + `InnerException`, menüye dön |
-| CRM bağlantısı başarısız | `LastCrmError` göster, yeniden dene seçeneği sun |
-| Plugin exception | Stack trace hem console hem log; `InnerException` zinciri tam gösterilir |
-| Constructor imzası eşleşmedi | Uyar, parameterless'a düş, devam et |
-| GUID parse hatası | Anında validate et, geçersiz girişte tekrar sor |
-| Senaryo JSON bozuk | `JsonException` yakala, hangi alan sorunlu ise göster |
-| PreImage attribute CRM'de yok | Uyarı ver ama çalıştırmaya devam et |
+| DLL failed to load | Red Markup panel, `ex.Message` + `InnerException`, return to menu |
+| CRM connection failed | Show `LastCrmError`, offer retry option |
+| Plugin exception | Stack trace shown in both console and log; full `InnerException` chain shown |
+| Constructor signature mismatch | Warn, fall back to parameterless, continue |
+| GUID parse error | Validate instantly, re-prompt on invalid input |
+| Corrupted scenario JSON | Catch `JsonException`, show which field is problematic |
+| PreImage attribute missing in CRM | Warn but continue execution |
 
 ---
 
-## 8. Geriye Dönük Uyumluluk
+## 8. Backward Compatibility
 
-- `App.config` okuma kaldırılmaz: uygulama açılışında `AssemblyPath` key'i varlık kontrolü
-- Varsa tek seferlik "senaryo olarak içe aktar" önerisi → `scenarios/imported_from_appconfig.json`
-- `App.config.example` güncellenir (yeni senaryo sistemi belgelenir)
-
----
-
-## 9. Bağımlılıklar
-
-Mevcut paketlere **tek eklenti**: `Spectre.Console` (.NET Framework 4.7.1 uyumlu).  
-`Newtonsoft.Json` zaten `packages.config`'te mevcut — senaryo serializasyonu için kullanılır.
+- `App.config` reading is not removed: check for the `AssemblyPath` key's existence on app startup
+- If present, offer a one-time "import as scenario" prompt → `scenarios/imported_from_appconfig.json`
+- `App.config.example` is updated (documents the new scenario system)
 
 ---
 
-## 10. Kapsam Dışı
+## 9. Dependencies
 
-- .NET 8 / SDK-style proje migrasyonu (plugin DLL uyumsuzluğu riski)
+**Single addition** to existing packages: `Spectre.Console` (.NET Framework 4.7.1 compatible).
+`Newtonsoft.Json` is already present in `packages.config` — used for scenario serialization.
+
+---
+
+## 10. Out of Scope
+
+- .NET 8 / SDK-style project migration (plugin DLL compatibility risk)
 - Multi-project solution
-- Unit test projesi
-- Headless / CI batch modu
-- NuGet paketi olarak dağıtım
+- Unit test project
+- Headless / CI batch mode
+- Distribution as a NuGet package

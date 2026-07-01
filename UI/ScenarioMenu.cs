@@ -26,17 +26,17 @@ namespace LocalAssemblyDebugger.UI
 
             if (scenarios.Count == 0)
             {
-                AnsiConsole.MarkupLine("[yellow]Kayitli senaryo bulunamadi.[/] (scenarios/*.json)");
-                AnsiConsole.MarkupLine("[grey]Plugin veya CodeActivity menusu uzerinden calistirip kaydedebilirsiniz.[/]\n");
+                AnsiConsole.MarkupLine("[yellow]No saved scenarios found.[/] (scenarios/*.json)");
+                AnsiConsole.MarkupLine("[grey]Run a Plugin or CodeActivity and save it as a scenario to see it here.[/]\n");
                 return null;
             }
 
             var table = new Table()
                 .Border(TableBorder.Rounded)
                 .AddColumn("#")
-                .AddColumn("Ad")
-                .AddColumn("Tip")
-                .AddColumn("Son Degisiklik");
+                .AddColumn("Name")
+                .AddColumn("Type")
+                .AddColumn("Last Modified");
 
             for (int i = 0; i < scenarios.Count; i++)
             {
@@ -51,30 +51,30 @@ namespace LocalAssemblyDebugger.UI
             AnsiConsole.Write(table);
 
             var choices = scenarios.Select(s => s.Name).ToList();
-            choices.Add("<- Geri");
+            choices.Add("<- Back");
 
             string selected = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title("Senaryo secin:")
+                    .Title("Select a scenario:")
                     .AddChoices(choices));
 
-            if (selected == "<- Geri") return null;
+            if (selected == "<- Back") return null;
 
             var info = scenarios.First(s => s.Name == selected);
 
             string action = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title($"[bold]{Markup.Escape(selected)}[/] icin islem:")
-                    .AddChoices("Calistir", "Sil", "<- Geri"));
+                    .Title($"Action for [bold]{Markup.Escape(selected)}[/]:")
+                    .AddChoices("Run", "Delete", "<- Back"));
 
-            if (action == "<- Geri") return null;
+            if (action == "<- Back") return null;
 
-            if (action == "Sil")
+            if (action == "Delete")
             {
-                if (AnsiConsole.Confirm($"[yellow]{Markup.Escape(selected)}[/] silinsin mi?", false))
+                if (AnsiConsole.Confirm($"Delete [yellow]{Markup.Escape(selected)}[/]?", false))
                 {
                     _service.Delete(info.FilePath);
-                    AnsiConsole.MarkupLine("[green]Senaryo silindi.[/]");
+                    AnsiConsole.MarkupLine("[green]Scenario deleted.[/]");
                 }
                 return null;
             }

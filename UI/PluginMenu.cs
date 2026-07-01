@@ -26,13 +26,13 @@ namespace LocalAssemblyDebugger.UI
             bool fromScenario = scenario != null;
             if (scenario == null) scenario = new PluginScenario();
 
-            AnsiConsole.MarkupLine("\n[bold cyan]== Plugin Calistir ==[/]");
+            AnsiConsole.MarkupLine("\n[bold cyan]== Run Plugin ==[/]");
 
             // Step 1: Assembly path
-            string assemblyPath = Prompts.Ask("Assembly yolu (.dll)", scenario.AssemblyPath);
+            string assemblyPath = Prompts.Ask("Assembly path (.dll)", scenario.AssemblyPath);
             if (string.IsNullOrWhiteSpace(assemblyPath))
             {
-                AnsiConsole.MarkupLine("[red]Assembly yolu zorunlu.[/]"); return;
+                AnsiConsole.MarkupLine("[red]Assembly path is required.[/]"); return;
             }
             scenario.AssemblyPath = assemblyPath;
 
@@ -42,40 +42,40 @@ namespace LocalAssemblyDebugger.UI
             scenario.ClassName = pluginType.FullName;
 
             // Step 3: Connection string
-            string conn = Prompts.Ask("CRM baglanti dizesi", scenario.ConnectionString);
+            string conn = Prompts.Ask("CRM connection string", scenario.ConnectionString);
             if (string.IsNullOrWhiteSpace(conn))
             {
-                AnsiConsole.MarkupLine("[red]Baglanti dizesi zorunlu.[/]"); return;
+                AnsiConsole.MarkupLine("[red]Connection string is required.[/]"); return;
             }
             scenario.ConnectionString = conn;
 
             // Step 4: Entity / message config
             scenario.EntityName   = Prompts.Ask("Entity logical name", scenario.EntityName);
             scenario.EntityId     = Prompts.AskGuid("Entity ID (GUID)", scenario.EntityId);
-            scenario.MessageName  = Prompts.Ask("Mesaj adi (Create/Update/...)", scenario.MessageName);
+            scenario.MessageName  = Prompts.Ask("Message name (Create/Update/...)", scenario.MessageName);
             scenario.Stage        = Prompts.AskInt("Stage (10=Pre-Val,20=Pre-Op,40=Post-Op)", scenario.Stage);
             scenario.Mode         = Prompts.AskInt("Mode (0=Sync,1=Async)", scenario.Mode);
             scenario.Depth        = Prompts.AskInt("Depth", scenario.Depth);
-            scenario.UnsecureConfig = Prompts.Ask("UnsecureConfig (bos=yok)", scenario.UnsecureConfig);
-            scenario.SecureConfig  = Prompts.Ask("SecureConfig (bos=yok)", scenario.SecureConfig);
+            scenario.UnsecureConfig = Prompts.Ask("UnsecureConfig (empty=none)", scenario.UnsecureConfig);
+            scenario.SecureConfig  = Prompts.Ask("SecureConfig (empty=none)", scenario.SecureConfig);
 
             // Step 5: Target attributes
-            scenario.TargetAttributes = Prompts.AskAttributes("Target Entity Attribute'lari", scenario.TargetAttributes);
+            scenario.TargetAttributes = Prompts.AskAttributes("Target Entity Attributes", scenario.TargetAttributes);
 
             // Step 6: Images
             ConfigureImages(scenario);
 
             // Step 7: Save?
-            if (AnsiConsole.Confirm("Bu ayarlari senaryo olarak kaydet?", !fromScenario))
+            if (AnsiConsole.Confirm("Save these settings as a scenario?", !fromScenario))
             {
-                string name = Prompts.Ask("Senaryo adi", scenario.Name);
+                string name = Prompts.Ask("Scenario name", scenario.Name);
                 scenario.Name = string.IsNullOrWhiteSpace(name) ? scenario.ClassName : name;
                 _service.Save(scenario);
-                AnsiConsole.MarkupLine($"[green]Senaryo kaydedildi: {Markup.Escape(scenario.Name)}[/]");
+                AnsiConsole.MarkupLine($"[green]Scenario saved: {Markup.Escape(scenario.Name)}[/]");
             }
 
             // Execute
-            if (!AnsiConsole.Confirm("Calistir?", true)) return;
+            if (!AnsiConsole.Confirm("Run now?", true)) return;
 
             Execute(scenario);
         }
@@ -84,7 +84,7 @@ namespace LocalAssemblyDebugger.UI
         {
             if (!File.Exists(assemblyPath))
             {
-                AnsiConsole.MarkupLine($"[red]Dosya bulunamadi: {Markup.Escape(assemblyPath)}[/]");
+                AnsiConsole.MarkupLine($"[red]File not found: {Markup.Escape(assemblyPath)}[/]");
                 return null;
             }
 
@@ -92,7 +92,7 @@ namespace LocalAssemblyDebugger.UI
             try { asm = Assembly.LoadFrom(assemblyPath); }
             catch (Exception ex)
             {
-                AnsiConsole.MarkupLine($"[red]Assembly yuklenemedi: {Markup.Escape(ex.Message)}[/]");
+                AnsiConsole.MarkupLine($"[red]Failed to load assembly: {Markup.Escape(ex.Message)}[/]");
                 return null;
             }
 
@@ -103,7 +103,7 @@ namespace LocalAssemblyDebugger.UI
 
             if (pluginTypes.Count == 0)
             {
-                AnsiConsole.MarkupLine("[red]IPlugin implement eden sinif bulunamadi.[/]");
+                AnsiConsole.MarkupLine("[red]No class implementing IPlugin was found.[/]");
                 return null;
             }
 
@@ -112,7 +112,7 @@ namespace LocalAssemblyDebugger.UI
 
             string selected = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title("Plugin sinifi secin:")
+                    .Title("Select a plugin class:")
                     .AddChoices(names));
 
             foreach (var t in pluginTypes)
@@ -124,38 +124,38 @@ namespace LocalAssemblyDebugger.UI
         {
             string imageMode = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title("Image yonetimi:")
+                    .Title("Image management:")
                     .AddChoices(
-                        "Devam et (image yok)",
-                        "PreImage tanimla",
-                        "PostImage tanimla",
-                        "Her ikisini tanimla",
-                        "CRM'den al (entity ID ile)"));
+                        "Continue (no image)",
+                        "Define PreImage",
+                        "Define PostImage",
+                        "Define both",
+                        "Retrieve from CRM (by entity ID)"));
 
-            if (imageMode == "Devam et (image yok)") return;
+            if (imageMode == "Continue (no image)") return;
 
-            if (imageMode == "CRM'den al (entity ID ile)")
+            if (imageMode == "Retrieve from CRM (by entity ID)")
             {
                 scenario.PreImages  = new Dictionary<string, List<InputParameter>>
                     { { "Target", new List<InputParameter> { new InputParameter { Name = "__crmRetrieve__", Type = "bool", Value = "true" } } } };
-                AnsiConsole.MarkupLine("[grey]CRM retrieve sentinel eklendi (PreImage:Target).[/]");
+                AnsiConsole.MarkupLine("[grey]CRM retrieve sentinel added (PreImage:Target).[/]");
                 return;
             }
 
-            bool doPreImage  = imageMode == "PreImage tanimla"  || imageMode == "Her ikisini tanimla";
-            bool doPostImage = imageMode == "PostImage tanimla" || imageMode == "Her ikisini tanimla";
+            bool doPreImage  = imageMode == "Define PreImage"  || imageMode == "Define both";
+            bool doPostImage = imageMode == "Define PostImage" || imageMode == "Define both";
 
             if (doPreImage)
             {
                 string key = Prompts.Ask("PreImage alias", "Target");
-                scenario.PreImages[key] = Prompts.AskAttributes($"PreImage '{key}' attribute'lari",
+                scenario.PreImages[key] = Prompts.AskAttributes($"PreImage '{key}' attributes",
                     scenario.PreImages.ContainsKey(key) ? scenario.PreImages[key] : null);
             }
 
             if (doPostImage)
             {
                 string key = Prompts.Ask("PostImage alias", "Target");
-                scenario.PostImages[key] = Prompts.AskAttributes($"PostImage '{key}' attribute'lari",
+                scenario.PostImages[key] = Prompts.AskAttributes($"PostImage '{key}' attributes",
                     scenario.PostImages.ContainsKey(key) ? scenario.PostImages[key] : null);
             }
         }
@@ -163,12 +163,12 @@ namespace LocalAssemblyDebugger.UI
         private void Execute(PluginScenario scenario)
         {
             CrmServiceClient service = null;
-            AnsiConsole.Status().Start("CRM'e baglaniliyor...", ctx =>
+            AnsiConsole.Status().Start("Connecting to CRM...", ctx =>
             {
                 try { service = CrmConnector.Connect(scenario.ConnectionString); }
                 catch (Exception ex)
                 {
-                    AnsiConsole.MarkupLine($"[red]Baglanti hatasi: {Markup.Escape(ex.Message)}[/]");
+                    AnsiConsole.MarkupLine($"[red]Connection error: {Markup.Escape(ex.Message)}[/]");
                 }
             });
             if (service == null) return;
@@ -211,7 +211,7 @@ namespace LocalAssemblyDebugger.UI
                 var start = DateTime.Now;
                 try
                 {
-                    AnsiConsole.Status().Start("Plugin calistiriliyor...", ctx =>
+                    AnsiConsole.Status().Start("Running plugin...", ctx =>
                         PluginExecutor.Execute(plugin, service, context, resolvedPreImages, resolvedPostImages, logger));
 
                     var elapsed = DateTime.Now - start;
@@ -223,7 +223,7 @@ namespace LocalAssemblyDebugger.UI
                     var elapsed = DateTime.Now - start;
                     logger.WriteResult(false, scenario.ClassName, scenario.EntityName, scenario.MessageName, elapsed);
                     logger.WriteError(ex.ToString());
-                    AnsiConsole.MarkupLine($"[red bold]Plugin hatasi:[/] {Markup.Escape(ex.Message)}");
+                    AnsiConsole.MarkupLine($"[red bold]Plugin error:[/] {Markup.Escape(ex.Message)}");
                     if (ex.InnerException != null)
                         AnsiConsole.MarkupLine($"[red]Inner: {Markup.Escape(ex.InnerException.Message)}[/]");
                 }
@@ -261,11 +261,11 @@ namespace LocalAssemblyDebugger.UI
                                 Value = attr.Value?.ToString() ?? ""
                             });
                         resolved[kv.Key] = attrs;
-                        AnsiConsole.MarkupLine($"[grey]CRM retrieve: {attrs.Count} attribute ({kv.Key})[/]");
+                        AnsiConsole.MarkupLine($"[grey]CRM retrieve: {attrs.Count} attribute(s) ({kv.Key})[/]");
                     }
                     catch (Exception ex)
                     {
-                        AnsiConsole.MarkupLine($"[yellow]CRM retrieve basarisiz ({kv.Key}): {Markup.Escape(ex.Message)}[/]");
+                        AnsiConsole.MarkupLine($"[yellow]CRM retrieve failed ({kv.Key}): {Markup.Escape(ex.Message)}[/]");
                         resolved[kv.Key] = new List<InputParameter>();
                     }
                 }
@@ -279,13 +279,13 @@ namespace LocalAssemblyDebugger.UI
 
         private void ShowResult(PluginExecutionContextFake context, DebugLogger logger)
         {
-            AnsiConsole.MarkupLine("\n[green bold]Plugin basariyla tamamlandi.[/]");
+            AnsiConsole.MarkupLine("\n[green bold]Plugin completed successfully.[/]");
 
             if (context.OutputParameters.Count > 0)
             {
                 var tbl = new Table().Border(TableBorder.Rounded)
                     .Title("[bold]Output Parameters[/]")
-                    .AddColumn("Parametre").AddColumn("Deger");
+                    .AddColumn("Parameter").AddColumn("Value");
                 foreach (var kv in context.OutputParameters)
                     tbl.AddRow(Markup.Escape(kv.Key), Markup.Escape(kv.Value?.ToString() ?? "(null)"));
                 AnsiConsole.Write(tbl);
@@ -296,7 +296,7 @@ namespace LocalAssemblyDebugger.UI
             }
             else
             {
-                AnsiConsole.MarkupLine("[grey]Output parameter yok.[/]");
+                AnsiConsole.MarkupLine("[grey]No output parameters.[/]");
             }
         }
     }
